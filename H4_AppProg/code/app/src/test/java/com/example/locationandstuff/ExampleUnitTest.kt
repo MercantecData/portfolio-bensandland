@@ -1,4 +1,4 @@
-package com.example.locationandthings
+package com.example.locationandstuff
 
 import org.junit.Test
 

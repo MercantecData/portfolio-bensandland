@@ -11,8 +11,8 @@
         android:id="@+id/toggleTheme"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Dark/Light theme"
-        tools:layout_editor_absoluteX="73dp"
-        tools:layout_editor_absoluteY="186dp" />
+        android:text="Dark/light theme"
+        tools:layout_editor_absoluteX="224dp"
+        tools:layout_editor_absoluteY="248dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
