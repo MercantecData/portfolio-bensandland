@@ -1,23 +1,28 @@
 package com.example.locationandstuff
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.preference.PreferenceManager
-import android.view.View
+import android.os.Looper
+import android.provider.Settings
 import android.widget.Switch
-import android.content.SharedPreferences
-import androidx.core.app.ComponentActivity.ExtraData
-import androidx.core.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.R.id.toggle
+import android.widget.TextView
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import com.google.android.gms.location.*
+import kotlinx.android.synthetic.main.activity_main.*
 
+private lateinit var fusedLocationClient: FusedLocationProviderClient
 
 class MainActivity : AppCompatActivity() {
+    val PERMISSION_ID = 42
+
     override fun onCreate(savedInstanceState: Bundle?) {
+
         // Set theme on start up by getting id and then calling setTheme with that as parameter
         val bundle :Bundle ?=intent.extras
         val theme_id = bundle?.getInt("theme")
@@ -32,6 +37,9 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
         // Get dark/light theme switch button
         val toggleBtn = findViewById<Switch>(R.id.toggleTheme)
         // Get state of switch button
@@ -62,6 +70,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        btnGetLocation.setOnClickListener {
+            fetchLocation()
+        }
     }
 
     fun changeTheme(i: Int = -1) {
@@ -74,5 +85,98 @@ class MainActivity : AppCompatActivity() {
             android.R.anim.fade_out
         )
         startActivity(intent)
+    }
+
+    private fun checkLocationPermissions(): Boolean {
+        // Check if app has permission to ACCESS_COARSE_LOCATION & ACCESS_FINE_LOCATION
+        // Returns true/false depending on permission results
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            return true
+        }
+
+        return false
+    }
+
+    private fun requestLocationPermissions() {
+        // Requests permission to use ACCESS_COARSE_LOCATION & ACCESS_FINE_LOCATION within the app.
+        // This is NOT the same as having location enabled within 'Settings'
+        ActivityCompat.requestPermissions(
+            this, arrayOf(android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                android.Manifest.permission.ACCESS_FINE_LOCATION),
+                PERMISSION_ID
+        )
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        // Is called when user grants/denies location permissions within the app
+        if (requestCode == PERMISSION_ID) {
+            if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                fetchLocation()
+            }
+        }
+    }
+
+    private fun fetchLocationState(): Boolean {
+        // This function checks if location is turned on (from within 'Settings')'
+        // - if user grants permission (from our prompt) but this is turned off it is of no use.
+        var locationManager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(
+            LocationManager.NETWORK_PROVIDER
+        )
+    }
+
+    private fun fetchNewLocationData() {
+        // Requests new location data from device.
+        // In some instances the location data from the device can be null
+        // - if that's the case this function is called to retrieve new data at runtime.
+        var mLocationRequest = LocationRequest()
+        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        mLocationRequest.interval = 0
+        mLocationRequest.fastestInterval = 0
+        mLocationRequest.numUpdates = 1
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        fusedLocationClient!!.requestLocationUpdates(
+            mLocationRequest, mLocationCallback,
+            Looper.myLooper()
+        )
+    }
+
+    private val mLocationCallback = object : LocationCallback() {
+        // When fetchNewLocationData receives new data it'll call this callBack method
+        // This function inserts the newly fetched data into the TextView objects.
+        override fun onLocationResult(locationResult: LocationResult) {
+            var mLastLocation: Location = locationResult.lastLocation
+            findViewById<TextView>(R.id.txtLatitude).text = "Latitude: " + mLastLocation.latitude.toString()
+            findViewById<TextView>(R.id.txtLongitude).text = "Longitude: " + mLastLocation.longitude.toString()
+        }
+    }
+
+    private fun fetchLocation() {
+        // Main 'location' function. Gets location data by using last entry. If none is found,
+        // fetchNewLocationData is called (which will fetch new data)
+
+        if (checkLocationPermissions()) {
+            if (fetchLocationState()) {
+                fusedLocationClient.lastLocation.addOnCompleteListener(this) { task ->
+                   var location: Location? = task.result
+                    if (location == null) {
+                        fetchNewLocationData()
+                    } else {
+                        findViewById<TextView>(R.id.txtLatitude).text = "Latitude: " + location.latitude.toString()
+                        findViewById<TextView>(R.id.txtLongitude).text = "Longitude: " + location.longitude.toString()
+                    }
+                }
+            } else {
+                // Location isn't enabled. Prompt user for access by creating a 'Toast'
+                Toast.makeText(this, "Turn on location", Toast.LENGTH_LONG).show()
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(intent)
+            }
+        } else {
+            // Location permissions isn't enabled by user
+            requestLocationPermissions()
+        }
     }
 }
