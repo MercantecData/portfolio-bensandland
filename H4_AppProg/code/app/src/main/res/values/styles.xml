@@ -16,5 +16,6 @@
         <item name="colorAccent">#e352e1</item>
         <item name="android:background">#333333</item>
         <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textColorHint">#F1E9E9</item>
     </style>
 </resources>

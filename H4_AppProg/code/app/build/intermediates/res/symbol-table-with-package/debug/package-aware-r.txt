@@ -783,6 +783,7 @@ id beginning
 id blocking
 id bottom
 id btnGetLocation
+id btnSaveAddr
 id buttonPanel
 id center_vertical
 id chains
@@ -899,6 +900,7 @@ id top
 id topPanel
 id txtBoxHomeAddr
 id txtBoxWorkAddr
+id txtDarkMode
 id txtLatitude
 id txtLongitude
 id unchecked

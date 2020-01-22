@@ -3,15 +3,14 @@ package com.example.locationandstuff
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Location
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
-import android.widget.Switch
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
@@ -19,12 +18,16 @@ import kotlinx.android.synthetic.main.activity_main.*
 private lateinit var fusedLocationClient: FusedLocationProviderClient
 
 class MainActivity : AppCompatActivity() {
+    // Permission id for location
     val PERMISSION_ID = 42
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Set theme on start up by getting id and then calling setTheme with that as parameter
-        val bundle :Bundle ?=intent.extras
-        val theme_id = bundle?.getInt("theme")
+        // Get saved preferences
+        val sharedPrefs =
+            getSharedPreferences("com.example.locationandstuff", Context.MODE_PRIVATE)
+        val editor = sharedPrefs.edit()
+
+        val theme_id = sharedPrefs.getInt("theme", 0)
 
         when (theme_id)
         {
@@ -41,20 +44,17 @@ class MainActivity : AppCompatActivity() {
 
         // Get dark/light theme switch button
         val toggleBtn = findViewById<Switch>(R.id.toggleTheme)
-        // Get state of switch button
-        val sharedPrefs =
-            getSharedPreferences("com.example.locationandstuff", Context.MODE_PRIVATE)
-        val editor = sharedPrefs.edit()
 
         // Get state
         toggleBtn.isChecked = sharedPrefs.getBoolean("toggleTheme", false)
 
         // Create event listener for toggle button
-        toggleBtn.setOnCheckedChangeListener { view, isChecked ->
+        toggleBtn.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 // Set state
                 editor.putBoolean("toggleTheme", true)
-                editor.commit()
+                editor.putInt("theme", 1)
+                editor.apply()
 
                 // Set to dark mode
                 changeTheme(1)
@@ -62,7 +62,8 @@ class MainActivity : AppCompatActivity() {
             } else {
                 // Set state
                 editor.putBoolean("toggleTheme", false)
-                editor.commit()
+                editor.putInt("theme", 0)
+                editor.apply()
 
                 // Set to light mode
                 changeTheme()
@@ -71,6 +72,23 @@ class MainActivity : AppCompatActivity() {
 
         btnGetLocation.setOnClickListener {
             fetchLocation()
+            val text = sharedPrefs.getString("homeAddress", "")
+            Toast.makeText(this, text, Toast.LENGTH_LONG).show()
+        }
+
+        val homeAddr = findViewById<EditText>(R.id.txtBoxHomeAddr)
+        val workAddr = findViewById<EditText>(R.id.txtBoxWorkAddr)
+        val btnSaveAddr = findViewById<Button>(R.id.btnSaveAddr)
+
+
+        btnSaveAddr.setOnClickListener {
+            val homeAddr = homeAddr.text
+            val workAddr = workAddr.text
+            with(sharedPrefs.edit()) {
+                putString("homeAddress", homeAddr!!.toString())
+                putString("workAddress", workAddr!!.toString())
+                apply()
+            }
         }
     }
 
