@@ -5,7 +5,7 @@ Jeg har valgt at lave en app i Android Studio, ved brug af sproget Kotlin.
 Mine features/krav til appen inkludere følgende:
 	- Dark/Light theme toggle [DONE]
 	- Get location ved brug af GPS [DONE]
-		- Sæt hjemme/arbejds adresse
+		- Sæt hjemme/arbejds adresse [DONE]
 		- Vis afstand fra nuværende lokation til hjem/arbejde
 		- Åben location i Maps (ekstra)
 		- Åben Maps med rute til hjem/arbejde fra nuværende lokation
