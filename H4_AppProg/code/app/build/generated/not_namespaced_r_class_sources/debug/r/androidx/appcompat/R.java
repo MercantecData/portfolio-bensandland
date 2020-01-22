@@ -788,10 +788,10 @@ public final class R {
         public static final int titleDividerNoCustom = 0x7f0700b3;
         public static final int title_template = 0x7f0700b4;
         public static final int topPanel = 0x7f0700b7;
-        public static final int unchecked = 0x7f0700ba;
-        public static final int uniform = 0x7f0700bb;
-        public static final int up = 0x7f0700bc;
-        public static final int wrap_content = 0x7f0700c1;
+        public static final int unchecked = 0x7f0700bc;
+        public static final int uniform = 0x7f0700bd;
+        public static final int up = 0x7f0700be;
+        public static final int wrap_content = 0x7f0700c3;
     }
     public static final class integer {
         private integer() {}

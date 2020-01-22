@@ -23,8 +23,8 @@
         android:text="Location"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.518"
-        tools:layout_editor_absoluteX="58dp" />
+        app:layout_constraintVertical_bias="0.527"
+        tools:layout_editor_absoluteX="59dp" />
 
     <TextView
         android:id="@+id/txtLatitude"
@@ -43,4 +43,27 @@
         app:layout_constraintBottom_toTopOf="@+id/txtLatitude"
         app:layout_constraintTop_toBottomOf="@+id/btnGetLocation"
         tools:layout_editor_absoluteX="72dp" />
+
+    <EditText
+        android:id="@+id/txtBoxHomeAddr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="Home address"
+        app:layout_constraintBottom_toTopOf="@+id/btnGetLocation"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="59dp" />
+
+    <EditText
+        android:id="@+id/txtBoxWorkAddr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="Work address"
+        app:layout_constraintBottom_toTopOf="@+id/btnGetLocation"
+        app:layout_constraintTop_toBottomOf="@+id/txtBoxHomeAddr"
+        tools:layout_editor_absoluteX="59dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

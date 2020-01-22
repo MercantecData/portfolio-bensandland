@@ -22,7 +22,6 @@ class MainActivity : AppCompatActivity() {
     val PERMISSION_ID = 42
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         // Set theme on start up by getting id and then calling setTheme with that as parameter
         val bundle :Bundle ?=intent.extras
         val theme_id = bundle?.getInt("theme")

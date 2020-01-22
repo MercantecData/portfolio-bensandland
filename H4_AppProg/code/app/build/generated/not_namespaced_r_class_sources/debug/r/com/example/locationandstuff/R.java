@@ -3716,16 +3716,18 @@ public final class R {
     public static final int toggleTheme=0x7f0700b5;
     public static final int top=0x7f0700b6;
     public static final int topPanel=0x7f0700b7;
-    public static final int txtLatitude=0x7f0700b8;
-    public static final int txtLongitude=0x7f0700b9;
-    public static final int unchecked=0x7f0700ba;
-    public static final int uniform=0x7f0700bb;
-    public static final int up=0x7f0700bc;
-    public static final int useLogo=0x7f0700bd;
-    public static final int wide=0x7f0700be;
-    public static final int withText=0x7f0700bf;
-    public static final int wrap=0x7f0700c0;
-    public static final int wrap_content=0x7f0700c1;
+    public static final int txtBoxHomeAddr=0x7f0700b8;
+    public static final int txtBoxWorkAddr=0x7f0700b9;
+    public static final int txtLatitude=0x7f0700ba;
+    public static final int txtLongitude=0x7f0700bb;
+    public static final int unchecked=0x7f0700bc;
+    public static final int uniform=0x7f0700bd;
+    public static final int up=0x7f0700be;
+    public static final int useLogo=0x7f0700bf;
+    public static final int wide=0x7f0700c0;
+    public static final int withText=0x7f0700c1;
+    public static final int wrap=0x7f0700c2;
+    public static final int wrap_content=0x7f0700c3;
   }
   public static final class integer {
     public static final int abc_config_activityDefaultDur=0x7f080000;

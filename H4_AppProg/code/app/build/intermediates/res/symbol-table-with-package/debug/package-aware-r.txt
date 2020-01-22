@@ -897,6 +897,8 @@ id title_template
 id toggleTheme
 id top
 id topPanel
+id txtBoxHomeAddr
+id txtBoxWorkAddr
 id txtLatitude
 id txtLongitude
 id unchecked
