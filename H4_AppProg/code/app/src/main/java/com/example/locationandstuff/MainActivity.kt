@@ -3,7 +3,6 @@ package com.example.locationandstuff
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.location.Location
 import android.location.LocationManager
 import androidx.appcompat.app.AppCompatActivity
@@ -14,19 +13,28 @@ import android.widget.*
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
+import android.net.Uri
+import com.google.gson.Gson
+import okhttp3.*
+import java.io.IOException
+import com.google.gson.JsonObject
+
 
 private lateinit var fusedLocationClient: FusedLocationProviderClient
 
 class MainActivity : AppCompatActivity() {
+    private val client = OkHttpClient()
+
     // Permission id for location
     val PERMISSION_ID = 42
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Get saved preferences
         val sharedPrefs =
             getSharedPreferences("com.example.locationandstuff", Context.MODE_PRIVATE)
-        val editor = sharedPrefs.edit()
 
+        val editor = sharedPrefs.edit()
         val theme_id = sharedPrefs.getInt("theme", 0)
 
         when (theme_id)
@@ -71,9 +79,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnGetLocation.setOnClickListener {
+            val address = sharedPrefs.getString("homeAddress", "")?.replace(' ', '+')
+            val requestStr = "https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=AIzaSyBj-tjOUw9itnhcUndoq1Ey3Ms2ANp5mtI"
+            runRequest(requestStr)
             fetchLocation()
-            val text = sharedPrefs.getString("homeAddress", "")
-            Toast.makeText(this, text, Toast.LENGTH_LONG).show()
+
+            Toast.makeText(this, address, Toast.LENGTH_LONG).show()
         }
 
         val homeAddr = findViewById<EditText>(R.id.txtBoxHomeAddr)
@@ -89,6 +100,35 @@ class MainActivity : AppCompatActivity() {
                 putString("workAddress", workAddr!!.toString())
                 apply()
             }
+        }
+
+        val btnOpenMaps = findViewById<Button>(R.id.btnMaps)
+
+        btnOpenMaps.setOnClickListener {
+            val latitude = findViewById<TextView>(R.id.txtLatitude).text.toString().split(":")[1].trim()
+            val longitude = findViewById<TextView>(R.id.txtLongitude).text.toString().split(":")[1].trim()
+            val homeAddr = sharedPrefs.getString("homeAddress", "")
+            val gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&origin=56.466025,9.410163&destination=$homeAddr")
+            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+            mapIntent.setPackage("com.google.android.apps.maps")
+            startActivity(mapIntent)
+        }
+
+        val btnLatLng = findViewById<Button>(R.id.btnLatLng)
+
+        btnLatLng.setOnClickListener {
+            val homeLat = sharedPrefs.getString("homeAddrLat", "")?.toDouble()
+            val homeLng = sharedPrefs.getString("homeAddrLng", "")?.toDouble()
+
+            //val currLat = sharedPrefs.getString("currentLat", "")?.toDouble()
+            //val currLng = sharedPrefs.getString("currentLng", "")?.toDouble()
+
+            val currLat = "56.464714".toDouble()
+            val currLng = "9.412679".toDouble()
+
+            val distance = calcDistance(currLat, currLng, homeLat, homeLng)
+
+            Toast.makeText(this, "Distance: $distance", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -171,6 +211,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fetchLocation() {
+        // Get saved preferences
+        val sharedPrefs =
+            getSharedPreferences("com.example.locationandstuff", Context.MODE_PRIVATE)
+
         // Main 'location' function. Gets location data by using last entry. If none is found,
         // fetchNewLocationData is called (which will fetch new data)
 
@@ -183,6 +227,12 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         findViewById<TextView>(R.id.txtLatitude).text = "Latitude: " + location.latitude.toString()
                         findViewById<TextView>(R.id.txtLongitude).text = "Longitude: " + location.longitude.toString()
+
+                        with(sharedPrefs.edit()) {
+                            putString("currentLat", location.latitude!!.toString())
+                            putString("currentLng", location.longitude!!.toString())
+                            apply()
+                        }
                     }
                 }
             } else {
@@ -195,5 +245,48 @@ class MainActivity : AppCompatActivity() {
             // Location permissions isn't enabled by user
             requestLocationPermissions()
         }
+    }
+
+    private fun runRequest(url: String) {
+        // Get saved preferences
+        val sharedPrefs =
+            getSharedPreferences("com.example.locationandstuff", Context.MODE_PRIVATE)
+
+        val request = Request.Builder()
+            .url(url)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+
+            }
+            override fun onResponse(call: Call, response: Response) {
+                val json = response.body()?.string()
+                val jobj = Gson().fromJson(json, JsonObject::class.java)
+
+                val pos = jobj.toString().split("{")[9].split(":")
+                val lat = pos[1].split(",")[0]
+                val lng = pos[2].split(",")[0].trim('}')
+
+                with(sharedPrefs.edit()) {
+                    putString("homeAddrLat", lat!!.toString())
+                    putString("homeAddrLng", lng!!.toString())
+                    apply()
+                }
+            }
+        })
+    }
+
+    private fun calcDistance(lat1 : Double?, lng1 : Double?, lat2 : Double?, lng2: Double?) : Float? {
+        var fromPos = Location("fromLocation")
+        var toPos = Location("toLocation")
+
+        fromPos?.latitude = lat1!!
+        fromPos?.longitude = lng1!!
+
+        toPos?.latitude = lat2!!
+        toPos?.longitude = lng2!!
+
+        return fromPos?.distanceTo(toPos) / 1000
     }
 }
