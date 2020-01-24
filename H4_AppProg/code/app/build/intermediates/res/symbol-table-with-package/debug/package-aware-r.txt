@@ -920,11 +920,13 @@ id text
 id text2
 id textSpacerNoButtons
 id textSpacerNoTitle
+id textView
 id time
 id title
 id titleDividerNoCustom
 id title_template
 id toggleTheme
+id toggleUseWorkAddr
 id top
 id topPanel
 id txtBoxHomeAddr

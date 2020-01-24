@@ -14,10 +14,9 @@ import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
 import kotlinx.android.synthetic.main.activity_main.*
 import android.net.Uri
-import com.google.gson.Gson
+import com.beust.klaxon.*
 import okhttp3.*
 import java.io.IOException
-import com.google.gson.JsonObject
 
 
 private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -33,10 +32,9 @@ class MainActivity : AppCompatActivity() {
         // Get saved preferences
         val sharedPrefs =
             getSharedPreferences("com.example.locationandstuff", Context.MODE_PRIVATE)
-
         val editor = sharedPrefs.edit()
-        val theme_id = sharedPrefs.getInt("theme", 0)
 
+        val theme_id = sharedPrefs.getInt("theme", 0)
         when (theme_id)
         {
             1 -> setTheme(R.style.darkTheme)
@@ -80,7 +78,10 @@ class MainActivity : AppCompatActivity() {
 
         btnGetLocation.setOnClickListener {
             val address = sharedPrefs.getString("homeAddress", "")?.replace(' ', '+')
-            val requestStr = "https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=AIzaSyBj-tjOUw9itnhcUndoq1Ey3Ms2ANp5mtI"
+            val key = application.assets.open("cred.txt").bufferedReader().use{
+                it.readText()
+            }
+            val requestStr = "https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=$key"
             runRequest(requestStr)
             fetchLocation()
 
@@ -105,10 +106,12 @@ class MainActivity : AppCompatActivity() {
         val btnOpenMaps = findViewById<Button>(R.id.btnMaps)
 
         btnOpenMaps.setOnClickListener {
-            val latitude = findViewById<TextView>(R.id.txtLatitude).text.toString().split(":")[1].trim()
-            val longitude = findViewById<TextView>(R.id.txtLongitude).text.toString().split(":")[1].trim()
+            //val lat = sharedPrefs.getString("currentLat", "")
+            //val lng = sharedPrefs.getString("currentLng", "")
+            val lat = 56.464809
+            val lng = 9.412528
             val homeAddr = sharedPrefs.getString("homeAddress", "")
-            val gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&origin=56.466025,9.410163&destination=$homeAddr")
+            val gmmIntentUri = Uri.parse("https://www.google.com/maps/dir/?api=1&origin=$lat,$lng&destination=$homeAddr")
             val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
             mapIntent.setPackage("com.google.android.apps.maps")
             startActivity(mapIntent)
@@ -117,18 +120,31 @@ class MainActivity : AppCompatActivity() {
         val btnLatLng = findViewById<Button>(R.id.btnLatLng)
 
         btnLatLng.setOnClickListener {
-            val homeLat = sharedPrefs.getString("homeAddrLat", "")?.toDouble()
-            val homeLng = sharedPrefs.getString("homeAddrLng", "")?.toDouble()
+            val lat = sharedPrefs.getString("homeAddrLat", "")?.toDouble()
+            val lng = sharedPrefs.getString("homeAddrLng", "")?.toDouble()
+
 
             //val currLat = sharedPrefs.getString("currentLat", "")?.toDouble()
             //val currLng = sharedPrefs.getString("currentLng", "")?.toDouble()
-
-            val currLat = "56.464714".toDouble()
-            val currLng = "9.412679".toDouble()
-
-            val distance = calcDistance(currLat, currLng, homeLat, homeLng)
+            val currLat = 56.464809
+            val currLng = 9.412528
+            val distance = calcDistance(currLat, currLng, lat, lng)
 
             Toast.makeText(this, "Distance: $distance", Toast.LENGTH_LONG).show()
+        }
+
+        val toggleWorkAddr = findViewById<Switch>(R.id.toggleUseWorkAddr)
+
+        toggleWorkAddr.setOnCheckedChangeListener {_, isChecked ->
+            if (isChecked) {
+                with(sharedPrefs.edit()) {
+                    putBoolean("useWorkAddr", true)
+                }
+            } else {
+                with(sharedPrefs.edit()) {
+                    putBoolean("useWorkAddr", false)
+                }
+            }
         }
     }
 
@@ -248,6 +264,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun runRequest(url: String) {
+        class Location(val Latitude: Double, val Longitude: Double)
+
         // Get saved preferences
         val sharedPrefs =
             getSharedPreferences("com.example.locationandstuff", Context.MODE_PRIVATE)
@@ -261,18 +279,20 @@ class MainActivity : AppCompatActivity() {
 
             }
             override fun onResponse(call: Call, response: Response) {
-                val json = response.body()?.string()
-                val jobj = Gson().fromJson(json, JsonObject::class.java)
-
-                val pos = jobj.toString().split("{")[9].split(":")
-                val lat = pos[1].split(",")[0]
-                val lng = pos[2].split(",")[0].trim('}')
+                val res = response.body()?.string()
+                val parser: Parser = Parser.default()
+                val stringBuilder: StringBuilder = StringBuilder(res.toString())
+                val json: JsonObject = parser.parse(stringBuilder) as JsonObject
+                val location = json.lookup<String?>("results.geometry.location")
+                val lng = location.get("lng").get(0)
+                val lat = location.get("lat").get(0)
 
                 with(sharedPrefs.edit()) {
                     putString("homeAddrLat", lat!!.toString())
                     putString("homeAddrLng", lng!!.toString())
                     apply()
                 }
+
             }
         })
     }
